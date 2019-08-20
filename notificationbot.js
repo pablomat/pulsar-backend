@@ -1,3 +1,4 @@
+require('dotenv').config()
 const utils = require('./utils')
 const Config = require('./config')
 const fs = require('fs')
