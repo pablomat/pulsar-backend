@@ -136,39 +136,43 @@ async function main(){
     time_last_message: 0,
   }
   while(true){
-    if(i%20 == 0) gpo = await steemClient.database.call('get_dynamic_global_properties')
+    try{
+      if(i%20 == 0) gpo = await steemClient.database.call('get_dynamic_global_properties')
 
-    var block_num = state.last_block + 1
-    var block = await steemClient.database.call('get_block',[block_num])
+      var block_num = state.last_block + 1
+      var block = await steemClient.database.call('get_block',[block_num])
 
-    if(block){
-      notifyBlock( block )
-      state.last_block = block_num
-      saveState()
-    }else{
-      utils.log(`block ${block_num} does not exist yet`)
-    }
-
-    diff_sync = gpo.head_block_number - state.last_block
-    if(diff_sync <= 1){
-      await delay(3000)
-      if(sync.last_message === 'no sync'){
-        utils.log(`Synchronized with the blockchain. Block ${gpo.head_block_number}. Time: ${gpo.time}`)
-        sync.last_message = 'sync'
-        sync.time_last_message = new Date().getTime()
+      if(block){
+        notifyBlock( block )
+        state.last_block = block_num
+        saveState()
+      }else{
+        utils.log(`block ${block_num} does not exist yet`)
       }
-    }else{
-      if(sync.last_message === 'sync'){
-        utils.log(`Not synchronized. Head block ${gpo.head_block_number} (${gpo.time}). Last checked block ${state.last_block}. Diff of ${diff_sync} blocks.`)
-        sync.last_message = 'no sync'
-        sync.time_last_message = new Date().getTime()
-      }else if(new Date().getTime() - sync.time_last_message >= 3*1000){
-        utils.log(`Syncing. Head block ${gpo.head_block_number} (${gpo.time}). Last checked block ${state.last_block}. Diff of ${diff_sync} blocks.`)
-        sync.time_last_message = new Date().getTime()
-      }
-    }
 
-    i++
+      diff_sync = gpo.head_block_number - state.last_block
+      if(diff_sync <= 1){
+        await delay(3000)
+        if(sync.last_message === 'no sync'){
+          utils.log(`Synchronized with the blockchain. Block ${gpo.head_block_number}. Time: ${gpo.time}`)
+          sync.last_message = 'sync'
+          sync.time_last_message = new Date().getTime()
+        }
+      }else{
+        if(sync.last_message === 'sync'){
+          utils.log(`Not synchronized. Head block ${gpo.head_block_number} (${gpo.time}). Last checked block ${state.last_block}. Diff of ${diff_sync} blocks.`)
+          sync.last_message = 'no sync'
+          sync.time_last_message = new Date().getTime()
+        }else if(new Date().getTime() - sync.time_last_message >= 3*1000){
+          utils.log(`Syncing. Head block ${gpo.head_block_number} (${gpo.time}). Last checked block ${state.last_block}. Diff of ${diff_sync} blocks.`)
+          sync.time_last_message = new Date().getTime()
+        }
+      }
+
+      i++
+    }catch(error){
+      utils.log(console.log(error))
+    }
   }
 }
 
