@@ -527,7 +527,7 @@ passport.deserializeUser((_id, done) => {
 })
 
 app.get("*", (req, res, next) => {
-  res.sendFile("index.html", { root: publicRoot })
+  res.sendFile("index.html", { root: Config.PUBLIC_ROOT })
 })
 
 app.listen(port, () => {
