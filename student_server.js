@@ -3,6 +3,7 @@ const axios = require('axios')
 const Utils = require('./utils')
 const Config = require('./config')
 const { Client, PrivateKey } = require('eftg-dsteem')
+require('dotenv').config()
 
 // creating an express instance
 const app = express()
@@ -14,7 +15,6 @@ const passport = require('passport')
 // getting the local authentication type
 const LocalStrategy = require('passport-local').Strategy
 
-const publicRoot = '/home/julian/pulsar_diploma/wallet/dist'
 const port = process.env.PORT || 3000
 
 /*app.all('*', function(req, res, next) {
@@ -30,7 +30,7 @@ app.use(express.static(publicRoot))*/
   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
   next();
 });*/
-app.use(express.static(publicRoot))
+app.use(express.static(Config.PUBLIC_ROOT))
 
 app.use(bodyParser.json())
 app.use(cookieSession({
@@ -44,7 +44,7 @@ app.use(passport.session());
 
 var MongoClient = require('mongodb').MongoClient;
 var ObjectId = require('mongodb').ObjectId;
-var url = 'mongodb://localhost:27017/wallet';
+var url = 'mongodb://localhost:27017/'+Config.DATABASE;
 
 var _mongoClient;
 var db;
