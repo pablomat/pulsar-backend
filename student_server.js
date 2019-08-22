@@ -1,9 +1,10 @@
 const express = require('express')
 const axios = require('axios')
+require('dotenv').config()
+
 const Utils = require('./utils')
 const Config = require('./config')
 const { Client, PrivateKey } = require('eftg-dsteem')
-require('dotenv').config()
 
 // creating an express instance
 const app = express()

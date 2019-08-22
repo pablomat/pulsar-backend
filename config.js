@@ -81,7 +81,6 @@ const final_memo_key      = process.env.MEMO_KEY      || memo_key
 const final_posting_key   = process.env.POSTING_KEY   || posting_key
 const final_active_key    = process.env.ACTIVE_KEY    || active_key
 
-const final_secret_create_account = process.env.SECRET_CREATE_ACCOUNT || secret_create_account
 const final_database = process.env.DATABASE || database
 const final_publicRoot = process.env.PUBLIC_ROOT || publicRoot
 
@@ -124,7 +123,6 @@ module.exports = {
   MEMO_KEY: final_memo_key,
   POSTING_KEY: final_posting_key,
   ACTIVE_KEY: final_active_key,
-  SECRET_CREATE_ACCOUNT: final_secret_create_account,
   DATABASE: final_database,
   PUBLIC_ROOT: final_publicRoot,
 };
