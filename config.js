@@ -3,25 +3,6 @@ const memo_key = '5JKVA1RMufcDpprpWmRsNVrkJtb3m3E8VbRUHdsVxC9CRxii2Z4'
 const posting_key = '5JKVA1RMufcDpprpWmRsNVrkJtb3m3E8VbRUHdsVxC9CRxii2Z4'
 const active_key = '5JKVA1RMufcDpprpWmRsNVrkJtb3m3E8VbRUHdsVxC9CRxii2Z4'
 
-const LOOK_ACCOUNTS = [
-  'iospace.tech',
-  'inova.technology',
-  'softspace.exp',
-  'smart.geo.system',
-  'smart.santinel',
-  'geo.raw.tech',
-  'greenplanet.tech',
-  'sea.tech.plus',
-  'ceospace',
-  'eoalert.sys',
-  'space.grid',
-  'sat.data.system',
-  'synotech'
-]
-const DERIVE_PRIVATE_KEYS = true
-
-const secret_create_account = 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
-
 const database = 'univ'
 const publicRoot = '../dist'
 
@@ -93,12 +74,7 @@ const MAP = {
   INI_ZOOM : 4 ,
 }
 
-const CONFIRMATION_PAYMENT_ID_NAME = 'confirmation_payment'
-const STATE_FILE = 'state.json'
-
 const APP_VERSION = 'pulsar/1.5.3';
-
-const ACCOUNT_CREATION_FEE = '3.000 PULSE'
 
 const final_account       = process.env.ACCOUNT       || account
 const final_memo_key      = process.env.MEMO_KEY      || memo_key
@@ -143,9 +119,6 @@ module.exports = {
   MAP:MAP,
 
   APP_VERSION: APP_VERSION,
-  ACCOUNT_CREATION_FEE,
-  CONFIRMATION_PAYMENT_ID_NAME,
-  STATE_FILE,
 
   ACCOUNT: final_account,
   MEMO_KEY: final_memo_key,
@@ -154,7 +127,4 @@ module.exports = {
   SECRET_CREATE_ACCOUNT: final_secret_create_account,
   DATABASE: final_database,
   PUBLIC_ROOT: final_publicRoot,
-
-  LOOK_ACCOUNTS,
-  DERIVE_PRIVATE_KEYS,
 };
