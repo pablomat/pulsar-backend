@@ -19,7 +19,7 @@ function validateUser(user) {
 function validateCourse(course) {
   if(!course.name) throw new Error('No name defined')
   if(!course.description) throw new Error('No description defined')
-  if(!course.level) throw new Error('No level defined')
+  if(!course.level_id) throw new Error('No level defined')
   if(!course.preconditions) {}
   return course
 }
@@ -38,32 +38,9 @@ function createPermlink(title) {
   return noise + '-' + title
 }
 
-function stringToAsset(data){
-  var parts = data.split(' ')
-  var currency = parts[1]
-  var precision = parts[0].length - parts[0].indexOf('.') - 1
-  var amount = parseInt(parseFloat(parts[0])*Math.pow(10,precision))
-  return {
-    amount,
-    precision,
-    currency
-  }
-}
-
-function assetToString(a){
-  return (a.amount/Math.pow(10,a.precision)).toFixed(a.precision) + ' ' + a.currency
-}
-
-function log(msg){
-  console.log(new Date().toISOString().slice(0,-5) + ' - ' + msg) 
-}
-
 module.exports = {
   validateUser,
   validateCourse,
   validateRequest,
-  createPermlink,
-  stringToAsset,
-  assetToString,
-  log
+  createPermlink
 }
