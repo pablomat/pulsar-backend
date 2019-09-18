@@ -166,7 +166,7 @@ app.post('/api/signup', async (req, res) => {
   var newUser = {
     username: req.body.username,
     password: req.body.password,
-    profile:  req.body.profile
+    profile:  req.body.profile,
     keys: [],
     issuers: []
   }
