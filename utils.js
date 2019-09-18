@@ -31,6 +31,13 @@ function validateRequest(request) {
   return request
 }
 
+function validateProfile(profile) {
+  if(!profile.name) throw new Error('No name defined')
+  if(!profile.family_name) throw new Error('No family name defined')
+  if(!profile.address) throw new Error('No address defined')
+  return profile
+}
+
 function createPermlink(title) {
   let permlink
   let noise = Math.random().toString(36).substring(7)

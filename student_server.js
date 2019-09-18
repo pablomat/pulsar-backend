@@ -166,6 +166,7 @@ app.post('/api/signup', async (req, res) => {
   var newUser = {
     username: req.body.username,
     password: req.body.password,
+    profile:  req.body.profile
     keys: [],
     issuers: []
   }
@@ -189,6 +190,25 @@ app.get("/api/login", authMiddleware, async (req, res) => {
   console.log('GET /api/login')
   var user = await getUser({_id:ObjectId(req.session.passport.user)})
   res.send(user)
+})
+
+app.post("/api/update_profile", authMiddleware, async (req, res, next) => {
+  var filter = {_id:ObjectId(req.session.passport.user)}
+  var user = await getUser(filter)
+
+  var profile = req.body.profile
+  try{
+    Utils.validateProfile(profile)
+  }catch(error){
+    res.status(404).send(error.message)
+    console.log(error.message)
+    return
+  }
+  
+  var filter = {_id:ObjectId(req.session.passport.user)}
+  db.collection('users').updateOne( filter, { $set: { profile: profile } })
+  console.log('profile updated')
+  res.send('Profile updated')
 })
 
 app.post("/api/create_keys", authMiddleware, async (req, res, next) => {
@@ -430,6 +450,7 @@ app.get("/api/get_keys", authMiddleware, async (req, res, next) => {
   var filter = {_id:ObjectId(req.session.passport.user)}
   var user = await getUser(filter)
   await checkIssuerUpdates(user)
+  user = await getUser(filter)
   res.send(user.keys)
   return
 })
