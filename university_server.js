@@ -149,6 +149,7 @@ const authMiddleware = async (req, res, next) => {
   /**
    * Authentication using passport
    */
+  //return next()
   if (!req.isAuthenticated()) {
     /**
      * Temporal authentication using username and password in each request
@@ -228,6 +229,42 @@ app.post("/api/students", authMiddleware, async (req, res, next) => {
   var students = await db.collection('students').find(filter).toArray()
   console.log('get students post')
   res.send(students)
+})
+
+async function generateUsername( user ){
+  var _username = user.name.toLowerCase().replace(/[^a-z]/gm, '') + '.' + user.family_name.toLowerCase().replace(/[^a-z]/gm, '')
+  var username = _username
+  var extraNumber = 0
+  while(true || extraNumber>=100){
+    if(extraNumber > 0)
+      username = _username + extraNumber
+    var db_user = await db.collection('users').findOne({username:username})
+    if(!db_user)
+      return username
+    extraNumber++
+  }
+  throw new Error(`Cannot create a username for ${user.name} ${user.family_name}`)
+}
+
+function generatePassword( username ){
+  return PrivateKey.fromLogin(username, Config.ACTIVE_KEY, 'owner').toString().substring(0,15)
+}
+
+app.post("/api/register_user", async (req, res, next) => {
+  try{
+    newUser = Utils.validateUser(req.body, true)
+  }catch(err){
+    res.status(400).send("Error validating user. "+err.message)
+    return
+  }
+  newUser.role = 'student'
+  newUser.username = await generateUsername( newUser )
+  newUser.password = generatePassword( newUser.username )
+
+  await db.collection('users').insertOne(newUser)
+  await db.collection('students').insertOne(newUser)
+  res.send(newUser)
+  console.log(`User registered ${newUser.username}`)  
 })
 
 app.post("/api/add_user", authMiddleware, isAdminMiddleware, async (req, res, next) => {
