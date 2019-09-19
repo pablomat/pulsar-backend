@@ -72,6 +72,23 @@ function RPCnode_initClient(address = Config.RPC_NODES[0]) {
 connectDB(url)
 var steemClient = RPCnode_initClient()
 
+async function getIssuerAPI(issuer){
+  var accounts = await steemClient.database.call('get_accounts',[[issuer]])
+  if(!accounts || accounts.length == 0)
+    return null
+
+  var account = accounts[0]
+  if(!account.json_metadata || account.json_metadata.length==0)
+    return null
+
+  var metadata = JSON.parse(account.json_metadata)
+
+  if(!metadata.api)
+    return null
+
+  return metadata.api
+}
+
 async function getUser(query) {
   var user = await db.collection('users').findOne(query)
   return user
@@ -252,45 +269,73 @@ app.post("/api/create_keys", authMiddleware, async (req, res, next) => {
   var issuer = user.issuers.find( (i)=> { return i.name === university })
   console.log('issuer')
   console.log(issuer)
-  if(issuer && issuer.api && issuer.username && issuer.password) {
-    try{
-      var login = {
-        username: issuer.username,
-        password: issuer.password
-      }
-      console.log('making login to '+issuer.api)
-      var userInIssuer = await axios.post(issuer.api + 'login', login)
 
-      console.log('logged in univ')
-      console.log(userInIssuer.data)
-      var data = {
-        auth: login,
-        request: {
-          user_id: userInIssuer.data._id,
-          key: pubKey.toString(),
-          preconditions: preconditions,
-          course: course
-        }
-      }
-      console.log('registering')
-      await axios.post(issuer.api + 'request_registration', data)
-      console.log('registered')
-
-      // get course image
-      var respCourses = await axios.get(issuer.api + 'courses')
-      var courseIssuer = respCourses.data.courses.find( (c)=>{ return c._id === course })
-      key.imgUrl = courseIssuer.imgUrl
-
-      await db.collection('users').updateOne(filter,{ $push: { keys: key } })
-      res.send({ok:true})
-      return
-    }catch(error){
-      console.log('login error')
-      console.log(error)
-      res.status(404).send(error.message)
+  if(!issuer) {
+    var api = await getIssuerAPI(university)
+    if(!api){
+      var msg = `Impossible to get the API of '${university}'`
+      console.log(msg)
+      res.status(404).send(msg)
       return
     }
+
+    try{
+      var result = await axios.post(api + 'register_user', user.profile )
+      console.log(`Registration done in ${university}. username: ${result.data.username}`)
+    }catch(error){
+      res.status(404).send(`Error registering user in ${university}`)
+      console.log(`Error registering user in ${university}`)
+      return
+    }
+
+    issuer = {
+      name: university,
+      api:  api,
+      username: result.data.username,
+      password: result.data.password
+    }
+
+    db.collection('users').updateOne( filter, { $push: { issuers: issuer } })
   }
+
+  try{
+    var login = {
+      username: issuer.username,
+      password: issuer.password
+    }
+    console.log('making login to '+issuer.api)
+    userInIssuer = await axios.post(issuer.api + 'login', login)
+
+    console.log('logged in univ')
+    console.log(userInIssuer.data)
+    var data = {
+      auth: login,
+      request: {
+        user_id: userInIssuer.data._id,
+        key: pubKey.toString(),
+        preconditions: preconditions,
+        course: course
+      }
+    }
+    console.log('registering')
+    await axios.post(issuer.api + 'request_registration', data)
+    console.log('registered')
+
+    // get course image
+    var respCourses = await axios.get(issuer.api + 'courses')
+    var courseIssuer = respCourses.data.courses.find( (c)=>{ return c._id === course })
+    key.imgUrl = courseIssuer.imgUrl
+
+    await db.collection('users').updateOne(filter,{ $push: { keys: key } })
+    res.send({ok:true})
+    return
+  }catch(error){
+    console.log('login error')
+    console.log(error)
+    res.status(404).send(error.message)
+    return
+  }
+  
   res.status(401).send('No issuer data')
   return
 })
