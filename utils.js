@@ -1,7 +1,9 @@
-function validateUser(user) {
+function validateUser(user, basic=false) {
   if(!user.name) throw new Error('No name defined')
   if(!user.family_name) throw new Error('No family name defined')
   if(!user.address) throw new Error('No address defined')
+  if(basic) return user
+
   if(!user.username) throw new Error('No username defined')
   if(!user.password) throw new Error('No password defined')
   if(!user.role) throw new Error('No role defined')
