@@ -491,6 +491,10 @@ app.post("/api/create_badges", authMiddleware, isAdminMiddleware, async (req, re
     res.status(400).send('No course name defined')
     return
   }
+  var update_post = false
+  if(req.body.author && req.body.permlink)
+    update_post = true
+
   var course = await db.collection('courses').findOne({_id:ObjectId(req.body.course._id)})
   if(!course){
     res.status(400).send('Course '+req.body.course.name+' not found')
@@ -568,7 +572,10 @@ app.post("/api/create_badges", authMiddleware, isAdminMiddleware, async (req, re
   }
   var title = course.name + ' ' + award_date
   var author = Config.ACCOUNT
-  var permlink = Utils.createPermlink(title)
+  if(update_post)
+    var permlink = req.body.permlink
+  else
+    var permlink = Utils.createPermlink(title)
   var url = '@'+author+'/'+permlink
 
   var operation = [
@@ -594,24 +601,34 @@ app.post("/api/create_badges", authMiddleware, isAdminMiddleware, async (req, re
   }
 
   badge.link = { author, permlink, title, url }
-  var insertedBadge = await db.collection('badges').insertOne({badge, assertionsPrivateInfo})
-
-  for(var i in assertionsPrivateInfo){
-    var a = assertionsPrivateInfo[i]
-
-    var studentBadge = {
-      _id: insertedBadge.insertedId,
-      issuer: badge.issuer,
-      name: badge.name,
-      link: badge.link
+  if(update_post){
+    console.log(`updating permlink ${permlink} of user ${req.body.no_graduates[0]._id}. Badge Revoked`)
+    console.log(req.body)
+    var filter = {
+      _id: ObjectId(req.body.student._id),
+      'badges.badge.link.permlink': permlink
     }
-
-    var badges = {
-      badge: studentBadge,
-      assertion: assertions[i]
+    await db.collection('students').updateOne(filter, { $set: { 'badges.$.assertion.revoked': true } })
+  }else{
+    var insertedBadge = await db.collection('badges').insertOne({badge, assertionsPrivateInfo})
+  
+    for(var i in assertionsPrivateInfo){
+      var a = assertionsPrivateInfo[i]
+  
+      var studentBadge = {
+        _id: insertedBadge.insertedId,
+        issuer: badge.issuer,
+        name: badge.name,
+        link: badge.link
+      }
+  
+      var badges = {
+        badge: studentBadge,
+        assertion: assertions[i]
+      }
+      console.log(a.recipient.realIdentity._id)
+      await db.collection('students').updateOne({_id:a.recipient.realIdentity._id}, {$push:{ badges }})
     }
-    console.log(a.recipient.realIdentity._id)
-    await db.collection('students').updateOne({_id:a.recipient.realIdentity._id}, {$push:{ badges }})
   }
   res.send(result)
 })
