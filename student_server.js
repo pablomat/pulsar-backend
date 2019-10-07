@@ -101,30 +101,42 @@ async function createProof(user, data) {
   var url = data.badge_url.trim()
   var permlink = url.substr(url.lastIndexOf('/') + 1);
   var issuer = url.substring(url.lastIndexOf('@') + 1, url.lastIndexOf('/'));
-  var content = await steemClient.database.call( 'get_content', [issuer, permlink] )
-  if(!content || !content.json_metadata){
-    throw new Error('There is no content on @'+issuer+'/'+permlink)
-    return
-  }
-  var metadata = JSON.parse(content.json_metadata)
-  if(!metadata || !metadata.assertions){
-    throw new Error('@'+issuer+'/'+permlink+' does not corresponds with a badge with assertions')
-  }
-  var assertion = metadata.assertions.find( 
-    (a)=>{
-      for(var i in user.keys) if(user.keys[i].public_key === a.recipient.identity) return true 
+
+  var userBadge = user.keys.find( (k)=>{
+    if(k.badge && k.badge.issuer === issuer && k.badge.permlink === permlink)
+      return true
+    else
       return false
+  })
+
+  if(userBadge) {
+    var privKey = PrivateKey.fromString( userBadge.private_key )
+  } else {
+    // search the badge in the blockchain
+    var content = await steemClient.database.call( 'get_content', [issuer, permlink] )
+    if(!content || !content.json_metadata){
+      throw new Error('There is no content on @'+issuer+'/'+permlink)
+      return
     }
-  )
-  if(!assertion){
-    throw new Error('There are not assertions in the badge that match with this private key')
+    var metadata = JSON.parse(content.json_metadata)
+    if(!metadata || !metadata.assertions){
+      throw new Error('@'+issuer+'/'+permlink+' does not corresponds with a badge with assertions')
+    }
+    var assertion = metadata.assertions.find( 
+      (a)=>{
+        for(var i in user.keys) if(user.keys[i].public_key === a.recipient.identity) return true 
+        return false
+      }
+    )
+    if(!assertion){
+      throw new Error('There are not assertions in the badge that match with this private key')
+    }
+    var privKey = null
+    for(var i in user.keys)
+      if(user.keys[i].public_key === assertion.recipient.identity)
+        privKey = PrivateKey.fromString(user.keys[i].private_key)
   }
-
-  var privKey = null
-  for(var i in user.keys)
-    if(user.keys[i].public_key === assertion.recipient.identity)
-      privKey = PrivateKey.fromString(user.keys[i].private_key)
-
+  
   var trx = {
     ref_block_num: 0,
     ref_block_prefix: 0,
@@ -240,9 +252,10 @@ app.post("/api/create_keys", authMiddleware, async (req, res, next) => {
   for(var i in req.body.preconditions){
     var dataProof = {
       badge_url: req.body.preconditions[i],
-      message: university,
+      message: `From ${user.profile.name} ${user.profile.family_name} to ${university}`,
       expiration_date: new Date(Date.now() + expiration).toISOString().slice(0, -5)
     }
+
     var presentation = await createProof(user, dataProof)
     preconditions.push(presentation)
   }
