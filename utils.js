@@ -69,6 +69,7 @@ module.exports = {
   validateUser,
   validateCourse,
   validateRequest,
+  validateProfile,
   createPermlink,
   stringToAsset,
   assetToString,
